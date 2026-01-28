@@ -1,0 +1,103 @@
+# ============================================
+# FF-Claims Configuration
+# Finite Frontier claim enhancements
+# ============================================
+
+# Enable/disable individual modules
+modules:
+  naming: true
+  market: true
+
+# ============================================
+# NAMING MODULE
+# Name your claims, show titles on entry
+# ============================================
+naming:
+  # Maximum length for claim names (color codes don't count)
+  max-name-length: 32
+
+  # Title display settings when entering a named claim
+  display:
+    fade-in: 5
+    stay: 40
+    fade-out: 10
+
+# ============================================
+# MARKET MODULE
+# Sell and auction claims with signs
+# ============================================
+market:
+  # Sale settings
+  sales:
+    # Minimum price for a sale listing
+    min-price: 100.0
+    # Maximum price for a sale listing (0 = no limit)
+    max-price: 0.0
+
+  # Auction settings
+  auctions:
+    # Minimum duration in hours
+    min-duration-hours: 1
+    # Maximum duration in days
+    max-duration-days: 14
+    # Default duration if not specified (hours)
+    default-duration-hours: 72
+    # How often to check for expired auctions (seconds)
+    expiration-check-interval: 30
+
+  # Sign text
+  signs:
+    sale-header: "[For Sale]"
+    auction-header: "[Auction]"
+    header-color: "&1"
+    price-color: "&0"
+    name-color: "&0"
+    info-color: "&8"
+
+  # GUI settings
+  gui:
+    sale-menu-title: "&1Purchase Claim"
+    auction-menu-title: "&1Auction Details"
+    confirm-title: "&4Confirm Purchase"
+
+# ============================================
+# MESSAGES
+# All messages support & color codes
+# ============================================
+messages:
+  prefix: "&6[FF-Claims]&r "
+  no-permission: "&cYou don't have permission to do that."
+  config-reloaded: "&aConfiguration reloaded!"
+
+  # Naming messages
+  naming:
+    claim-named: "&aThis claim is now named: &f%name%"
+    claim-name-cleared: "&aClaim name removed."
+    current-name: "&7This claim is named: &f%name%"
+    no-name: "&7This claim has no name."
+    not-in-claim: "&cYou are not standing in a claim."
+    no-permission: "&cYou don't have permission to name this claim."
+    name-too-long: "&cName is too long! Max %max% characters."
+    claimtop-header: "&6&l--- Claim Block Rankings &7(Page %page%/%total%) &6&l---"
+    claimtop-entry: "&e%rank%. &f%player% &7- &a%total% total &7(&2%used% used&7, &b%unused% unused&7)"
+    claimtop-footer: "&7Use &f/claimtop <page> &7to view more."
+    claimtop-empty: "&7No players with claims found."
+    claimtop-invalid-page: "&cInvalid page number."
+
+  # Market messages
+  market:
+    sale-created: "&aYour claim is now listed for sale at &e%price%&a!"
+    auction-created: "&aYour claim auction has started! Minimum bid: &e%min%"
+    purchase-success: "&aYou purchased the claim for &e%price%&a!"
+    bid-placed: "&aYour sealed bid of &e%amount%&a has been recorded."
+    bid-won: "&aYou won the auction for &e%price%&a! (Vickrey: 2nd highest bid)"
+    outbid: "&eYou have been outbid! Your bid: &c%your_bid%&e, Current highest: &a%high_bid%"
+    auction-won-seller: "&a%winner% won your auction! You received &e%price%"
+    not-claim-owner: "&cYou must own this claim to list it."
+    already-listed: "&cThis claim already has an active listing."
+    not-in-claim: "&cYou must place the sign inside the claim you're selling."
+    invalid-price: "&cInvalid price format. Use numbers like 50000 or 50k."
+    insufficient-funds: "&cYou don't have enough money. Required: &e%price%"
+    sale-cancelled: "&aYour listing has been cancelled."
+    auction-cancelled: "&aYour auction has been cancelled. All bidders notified."
+    no-bids-expired: "&eYour auction expired with no bids."

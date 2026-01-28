@@ -1,0 +1,60 @@
+name: FFClaims
+version: ${version}
+main: com.haksnbot.ffclaims.FFClaimsPlugin
+api-version: "1.21"
+description: Finite Frontier claim enhancements - naming, selling, and auctioning claims
+authors:
+  - Haksnbot
+website: https://haksndot.com
+
+depend:
+  - GriefPrevention
+
+softdepend:
+  - Vault
+  - dynmap
+
+commands:
+  ffclaims:
+    description: FF-Claims main command
+    aliases: [ffc]
+    usage: /<command> <reload|list|mybids|mylistings|help>
+  nameclaim:
+    description: Name the claim you are standing in
+    usage: /nameclaim [name|clear]
+    permission: ffclaims.naming.use
+  claimtop:
+    description: Show players ranked by total claim blocks
+    usage: /claimtop [page]
+    permission: ffclaims.naming.claimtop
+
+permissions:
+  # Naming permissions
+  ffclaims.naming.use:
+    description: Use /nameclaim to name your own claims
+    default: true
+  ffclaims.naming.claimtop:
+    description: Use /claimtop to see claim block rankings
+    default: true
+  ffclaims.naming.admin:
+    description: Name any claim regardless of ownership
+    default: op
+
+  # Market permissions
+  ffclaims.market.sell:
+    description: Allows creating sale listings
+    default: true
+  ffclaims.market.auction:
+    description: Allows creating auction listings
+    default: true
+  ffclaims.market.buy:
+    description: Allows purchasing and bidding
+    default: true
+  ffclaims.market.use:
+    description: Basic market usage (list, mybids)
+    default: true
+
+  # Admin
+  ffclaims.admin:
+    description: Admin commands (reload, cancel any listing)
+    default: op
