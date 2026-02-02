@@ -14,6 +14,7 @@ Give your claims custom names that show up everywhere — on entry, on dynmap, a
 - **`/nameclaim clear`** — Remove the name
 - **`/nameclaim`** — View the current claim's name
 - **`/claimtop [page]`** — Leaderboard ranking players by total claim blocks
+- **`/claimsbook`** — Get a guidebook explaining claims and the market (includes GP basics)
 - **Title on entry** — Players see the claim name as a title when they walk in
 - **`/claimslist` enhancement** — Intercepts GriefPrevention's claim list to show names alongside coordinates
 - **Dynmap markers** — Named claims appear as markers on the web map (requires [dynmap](https://github.com/webbukkit/dynmap))
@@ -181,6 +182,7 @@ All messages are configurable under `messages.naming.*` and `messages.market.*` 
 | `ffclaims.naming.use` | true | Use `/nameclaim` on your own claims |
 | `ffclaims.naming.claimtop` | true | Use `/claimtop` |
 | `ffclaims.naming.admin` | op | Name any claim regardless of ownership |
+| `ffclaims.book` | true | Use `/claimsbook` to get the guidebook |
 
 ### Market
 

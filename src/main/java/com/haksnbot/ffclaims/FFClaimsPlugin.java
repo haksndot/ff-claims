@@ -79,6 +79,9 @@ public class FFClaimsPlugin extends JavaPlugin {
         getCommand("ffclaims").setExecutor(mainCommand);
         getCommand("ffclaims").setTabCompleter(mainCommand);
 
+        // Register claimsbook command
+        getCommand("claimsbook").setExecutor(new ClaimsBookCommand(this));
+
         getLogger().info("FF-Claims enabled! Naming: " + (namingEnabled ? "ON" : "OFF") +
                 ", Market: " + (marketEnabled ? "ON" : "OFF"));
     }

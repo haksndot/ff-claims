@@ -27,6 +27,10 @@ commands:
     description: Show players ranked by total claim blocks
     usage: /claimtop [page]
     permission: ffclaims.naming.claimtop
+  claimsbook:
+    description: Get a guidebook explaining claims and the market
+    usage: /claimsbook
+    permission: ffclaims.book
 
 permissions:
   # Naming permissions
@@ -52,6 +56,11 @@ permissions:
     default: true
   ffclaims.market.use:
     description: Basic market usage (list, mybids)
+    default: true
+
+  # Misc
+  ffclaims.book:
+    description: Use /claimsbook to get the guidebook
     default: true
 
   # Admin
