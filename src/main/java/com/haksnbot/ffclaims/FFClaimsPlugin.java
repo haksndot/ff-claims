@@ -4,6 +4,7 @@ import com.haksnbot.ffclaims.config.ConfigManager;
 import com.haksnbot.ffclaims.hooks.GriefPreventionHook;
 import com.haksnbot.ffclaims.hooks.VaultHook;
 import com.haksnbot.ffclaims.market.data.MarketDataManager;
+import com.haksnbot.ffclaims.market.data.TransactionLogger;
 import com.haksnbot.ffclaims.market.gui.MenuManager;
 import com.haksnbot.ffclaims.market.listeners.InventoryClickListener;
 import com.haksnbot.ffclaims.market.listeners.MarketSignInteractListener;
@@ -41,6 +42,7 @@ public class FFClaimsPlugin extends JavaPlugin {
     // Market module components (optional - requires Vault)
     private VaultHook vaultHook;
     private MarketDataManager marketDataManager;
+    private TransactionLogger transactionLogger;
     private SignManager signManager;
     private ListingManager listingManager;
     private SaleManager saleManager;
@@ -48,6 +50,7 @@ public class FFClaimsPlugin extends JavaPlugin {
     private MenuManager menuManager;
     private AuctionExpirationTask expirationTask;
     private boolean marketEnabled = false;
+    private boolean dualCurrencyActive = false;
 
     @Override
     public void onEnable() {
@@ -128,9 +131,21 @@ public class FFClaimsPlugin extends JavaPlugin {
             return;
         }
 
+        // Check for DualCurrency plugin (claim blocks bought with items, not cash)
+        dualCurrencyActive = getServer().getPluginManager().isPluginEnabled("DualCurrency");
+        if (dualCurrencyActive) {
+            getLogger().info("DualCurrency detected - claim block minimum pricing disabled.");
+        } else if (griefPreventionHook.isEconomyModeEnabled()) {
+            getLogger().info("GP economy mode active - claim block value: $" +
+                    griefPreventionHook.getClaimBlockPurchaseCost() + " per block.");
+        }
+
         // Initialize market data
         marketDataManager = new MarketDataManager(this);
         marketDataManager.load();
+
+        // Initialize transaction logger
+        transactionLogger = new TransactionLogger(this);
 
         // Initialize managers
         signManager = new SignManager(this);
@@ -226,6 +241,10 @@ public class FFClaimsPlugin extends JavaPlugin {
         return marketDataManager;
     }
 
+    public TransactionLogger getTransactionLogger() {
+        return transactionLogger;
+    }
+
     public SignManager getSignManager() {
         return signManager;
     }
@@ -244,5 +263,32 @@ public class FFClaimsPlugin extends JavaPlugin {
 
     public MenuManager getMenuManager() {
         return menuManager;
+    }
+
+    /**
+     * Check if DualCurrency plugin is active (claim blocks bought with items, not cash).
+     * When active, claim-block-based minimum pricing is disabled since currencies don't convert.
+     */
+    public boolean isDualCurrencyActive() {
+        return dualCurrencyActive;
+    }
+
+    /**
+     * Check if claim-block-based minimum pricing should be enforced.
+     * True only when: market enabled, dual-currency NOT active, and GP economy mode is enabled.
+     */
+    public boolean isClaimBlockPricingEnabled() {
+        return marketEnabled && !dualCurrencyActive && griefPreventionHook.isEconomyModeEnabled();
+    }
+
+    /**
+     * Get the minimum price for a claim based on its claim block value.
+     * Returns 0 if claim block pricing is not enabled.
+     */
+    public double getMinimumClaimPrice(me.ryanhamshire.GriefPrevention.Claim claim) {
+        if (!isClaimBlockPricingEnabled()) {
+            return 0;
+        }
+        return griefPreventionHook.getClaimBlockValue(claim);
     }
 }

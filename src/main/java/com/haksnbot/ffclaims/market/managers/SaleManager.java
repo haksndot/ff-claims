@@ -110,6 +110,32 @@ public class SaleManager {
 
         // === TRANSACTION SUCCESS ===
 
+        // Transfer claim blocks to buyer
+        int claimArea = gpHook.getClaimArea(claim);
+        gpHook.transferClaimBlocks(sale.getSellerUUID(), buyer.getUniqueId(), claimArea);
+
+        // Get claim name if available
+        String claimName = null;
+        if (plugin.isNamingEnabled() && plugin.getNamingDataManager() != null) {
+            Long claimId = gpHook.getClaimId(claim);
+            if (claimId != null) {
+                claimName = plugin.getNamingDataManager().getClaimName(claimId);
+            }
+        }
+
+        // Log the transaction
+        Location claimLoc = sale.getClaimLocation();
+        String claimLocStr = String.format("%s @ %d, %d, %d",
+                claimLoc.getWorld().getName(),
+                claimLoc.getBlockX(), claimLoc.getBlockY(), claimLoc.getBlockZ());
+
+        plugin.getTransactionLogger().logSale(
+                sale.getSellerUUID(), sale.getSellerName(),
+                buyer.getUniqueId(), buyer.getName(),
+                sale.getPrice(), claimArea, sale.getDimensions(),
+                claimLocStr, claimName
+        );
+
         // Remove the sale listing
         plugin.getSignManager().removeSign(sale.getSignLocation());
         plugin.getMarketDataManager().removeSale(sale.getId());

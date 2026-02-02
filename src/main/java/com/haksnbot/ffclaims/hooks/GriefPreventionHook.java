@@ -3,8 +3,10 @@ package com.haksnbot.ffclaims.hooks;
 import me.ryanhamshire.GriefPrevention.Claim;
 import me.ryanhamshire.GriefPrevention.GriefPrevention;
 import me.ryanhamshire.GriefPrevention.PlayerData;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.configuration.file.FileConfiguration;
 
 import java.util.Collection;
 import java.util.UUID;
@@ -202,5 +204,91 @@ public class GriefPreventionHook {
             return null;
         }
         return claim.allowBuild(player, null);
+    }
+
+    /**
+     * Get the claim block purchase cost from GriefPrevention config.
+     * Returns 0 if not configured or unavailable.
+     */
+    public double getClaimBlockPurchaseCost() {
+        try {
+            FileConfiguration gpConfig = griefPrevention.getConfig();
+            return gpConfig.getDouble("GriefPrevention.Economy.ClaimBlocksPurchaseCost", 0.0);
+        } catch (Exception e) {
+            return 0.0;
+        }
+    }
+
+    /**
+     * Check if claim block purchasing with economy is enabled in GP.
+     */
+    public boolean isEconomyModeEnabled() {
+        return getClaimBlockPurchaseCost() > 0;
+    }
+
+    /**
+     * Calculate the minimum sensible price for a claim based on claim block value.
+     * Returns 0 if economy mode is not enabled.
+     */
+    public double getClaimBlockValue(Claim claim) {
+        if (claim == null) {
+            return 0;
+        }
+        double costPerBlock = getClaimBlockPurchaseCost();
+        if (costPerBlock <= 0) {
+            return 0;
+        }
+        return claim.getArea() * costPerBlock;
+    }
+
+    /**
+     * Get a player's total claim blocks (accrued + bonus).
+     */
+    public int getPlayerTotalClaimBlocks(UUID playerUUID) {
+        PlayerData playerData = getPlayerData(playerUUID);
+        if (playerData == null) {
+            return 0;
+        }
+        return playerData.getAccruedClaimBlocks() + playerData.getBonusClaimBlocks();
+    }
+
+    /**
+     * Get a player's remaining (unused) claim blocks.
+     */
+    public int getPlayerRemainingClaimBlocks(UUID playerUUID) {
+        PlayerData playerData = getPlayerData(playerUUID);
+        if (playerData == null) {
+            return 0;
+        }
+        return playerData.getRemainingClaimBlocks();
+    }
+
+    /**
+     * Adjust a player's bonus claim blocks by a delta amount.
+     * Positive delta adds blocks, negative removes blocks.
+     */
+    public void adjustPlayerBonusClaimBlocks(UUID playerUUID, int delta) {
+        PlayerData playerData = getPlayerData(playerUUID);
+        if (playerData == null) {
+            return;
+        }
+        int currentBonus = playerData.getBonusClaimBlocks();
+        playerData.setBonusClaimBlocks(currentBonus + delta);
+        griefPrevention.dataStore.savePlayerData(playerUUID, playerData);
+    }
+
+    /**
+     * Transfer claim blocks from seller to buyer as part of a sale.
+     * The claim area is removed from seller's effective balance and added to buyer's.
+     */
+    public void transferClaimBlocks(UUID sellerUUID, UUID buyerUUID, int claimArea) {
+        // Seller loses the claim blocks (they were "invested" in the claim)
+        // We don't need to remove from seller - the claim ownership change handles that
+        // But we DO need to give the buyer enough blocks if they don't have them
+
+        // Actually, GP's changeClaimOwner just reassigns. The buyer might not have enough
+        // blocks to "afford" the claim in their balance. We need to grant them bonus blocks
+        // equal to the claim size to ensure they can own it.
+        adjustPlayerBonusClaimBlocks(buyerUUID, claimArea);
     }
 }

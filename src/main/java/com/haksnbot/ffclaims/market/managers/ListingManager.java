@@ -4,6 +4,7 @@ import com.haksnbot.ffclaims.FFClaimsPlugin;
 import com.haksnbot.ffclaims.hooks.GriefPreventionHook;
 import com.haksnbot.ffclaims.market.data.AuctionData;
 import com.haksnbot.ffclaims.market.data.SaleData;
+import com.haksnbot.ffclaims.market.signs.SignFormatter;
 import me.ryanhamshire.GriefPrevention.Claim;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -54,6 +55,37 @@ public class ListingManager {
             return plugin.getConfigManager().getMessage("market.already-listed");
         }
 
+        return null; // Valid
+    }
+
+    /**
+     * Get the minimum price for a claim at the given location.
+     * This is based on claim block value (area × cost per block).
+     * Returns 0 if claim-block pricing is not enabled (e.g., dual-currency mode).
+     */
+    public double getMinimumPriceForClaim(Location signLocation) {
+        Claim claim = plugin.getGriefPreventionHook().getClaimAt(signLocation);
+        if (claim == null) {
+            return 0;
+        }
+        return plugin.getMinimumClaimPrice(claim);
+    }
+
+    /**
+     * Validate that a price meets the minimum requirement for a claim.
+     * Returns null if valid, or an error message if the price is too low.
+     */
+    public String validateListingPrice(Location signLocation, double price) {
+        double minimumPrice = getMinimumPriceForClaim(signLocation);
+        if (minimumPrice > 0 && price < minimumPrice) {
+            Claim claim = plugin.getGriefPreventionHook().getClaimAt(signLocation);
+            int area = claim != null ? claim.getArea() : 0;
+            double costPerBlock = plugin.getGriefPreventionHook().getClaimBlockPurchaseCost();
+            return String.format("Price too low. Minimum: %s (%,d blocks × %s/block)",
+                    SignFormatter.formatPriceFull(minimumPrice),
+                    area,
+                    SignFormatter.formatPriceFull(costPerBlock));
+        }
         return null; // Valid
     }
 

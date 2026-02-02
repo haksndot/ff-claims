@@ -4,6 +4,9 @@ import com.haksnbot.ffclaims.market.data.AuctionData;
 import com.haksnbot.ffclaims.market.data.BidData;
 import com.haksnbot.ffclaims.market.data.SaleData;
 import com.haksnbot.ffclaims.market.signs.SignFormatter;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -12,6 +15,7 @@ import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Main command handler for FF-Claims plugin.
@@ -39,6 +43,7 @@ public class FFClaimsCommand implements CommandExecutor, TabCompleter {
             case "list" -> handleList(sender);
             case "mybids" -> handleMyBids(sender);
             case "mylistings" -> handleMyListings(sender);
+            case "transactions", "tx" -> handleTransactions(sender, args);
             case "help" -> showHelp(sender);
             default -> sender.sendMessage(plugin.getConfigManager().getPrefix() +
                     "Unknown command. Use /ffc help for help.");
@@ -223,6 +228,84 @@ public class FFClaimsCommand implements CommandExecutor, TabCompleter {
         }
     }
 
+    private void handleTransactions(CommandSender sender, String[] args) {
+        if (!plugin.isMarketEnabled()) {
+            sender.sendMessage(plugin.getConfigManager().getPrefix() +
+                    "Market module is not enabled.");
+            return;
+        }
+
+        if (!sender.hasPermission("ffclaims.market.use")) {
+            sender.sendMessage(plugin.getConfigManager().getPrefix() +
+                    plugin.getConfigManager().getMessage("no-permission"));
+            return;
+        }
+
+        // Check if looking up a specific transaction
+        if (args.length > 1 && args[1].toUpperCase().startsWith("TX")) {
+            String txId = args[1].toUpperCase();
+            String detail = plugin.getTransactionLogger().getTransaction(txId);
+            if (detail == null) {
+                sender.sendMessage(plugin.getConfigManager().getPrefix() +
+                        "Transaction " + txId + " not found.");
+                return;
+            }
+            sender.sendMessage(ChatColor.translateAlternateColorCodes('&', detail));
+            return;
+        }
+
+        // Determine count and optional player filter
+        int count = 10;
+        UUID playerFilter = null;
+
+        if (args.length > 1) {
+            // Try to parse as number first
+            try {
+                count = Integer.parseInt(args[1]);
+                count = Math.min(count, 50); // Cap at 50
+            } catch (NumberFormatException e) {
+                // Try to parse as player name
+                if (sender.hasPermission("ffclaims.admin")) {
+                    @SuppressWarnings("deprecation")
+                    OfflinePlayer target = Bukkit.getOfflinePlayer(args[1]);
+                    if (target.hasPlayedBefore() || target.isOnline()) {
+                        playerFilter = target.getUniqueId();
+                    } else {
+                        sender.sendMessage(plugin.getConfigManager().getPrefix() +
+                                "Player '" + args[1] + "' not found.");
+                        return;
+                    }
+                } else {
+                    sender.sendMessage(plugin.getConfigManager().getPrefix() +
+                            "You don't have permission to view other players' transactions.");
+                    return;
+                }
+            }
+        }
+
+        // If not admin and looking at general history, could show only their own
+        // For now, allow all players to see recent transactions (it's public info)
+
+        List<String> transactions = plugin.getTransactionLogger().getRecentTransactions(count, playerFilter);
+
+        if (transactions.isEmpty()) {
+            String msg = playerFilter != null ?
+                    "No transactions found for that player." :
+                    "No transactions recorded yet.";
+            sender.sendMessage(plugin.getConfigManager().getPrefix() + msg);
+            return;
+        }
+
+        int totalCount = plugin.getTransactionLogger().getTransactionCount();
+        sender.sendMessage("\u00A76--- Recent Transactions (" + transactions.size() + "/" + totalCount + " total) ---");
+
+        for (String tx : transactions) {
+            sender.sendMessage(ChatColor.translateAlternateColorCodes('&', tx));
+        }
+
+        sender.sendMessage("\u00A77Use \u00A7e/ffc tx <TX#>\u00A77 for details.");
+    }
+
     private void showHelp(CommandSender sender) {
         sender.sendMessage("\u00A76=== FF-Claims Help ===");
         sender.sendMessage("\u00A7eFF-Claims \u00A77- Finite Frontier claims enhancements");
@@ -239,6 +322,8 @@ public class FFClaimsCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage("\u00A7e/ffc list \u00A77- Show all active listings");
             sender.sendMessage("\u00A7e/ffc mybids \u00A77- Show your active bids");
             sender.sendMessage("\u00A7e/ffc mylistings \u00A77- Show your active listings");
+            sender.sendMessage("\u00A7e/ffc transactions [count] \u00A77- View recent transactions");
+            sender.sendMessage("\u00A7e/ffc tx <TX#> \u00A77- View transaction details");
             sender.sendMessage("");
             sender.sendMessage("\u00A77To sell a claim, place a sign with:");
             sender.sendMessage("\u00A7f  [For Sale]");
@@ -269,6 +354,8 @@ public class FFClaimsCommand implements CommandExecutor, TabCompleter {
                 if ("list".startsWith(partial)) completions.add("list");
                 if ("mybids".startsWith(partial)) completions.add("mybids");
                 if ("mylistings".startsWith(partial)) completions.add("mylistings");
+                if ("transactions".startsWith(partial)) completions.add("transactions");
+                if ("tx".startsWith(partial)) completions.add("tx");
             }
             if ("help".startsWith(partial)) completions.add("help");
 

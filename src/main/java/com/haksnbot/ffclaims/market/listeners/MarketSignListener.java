@@ -70,6 +70,14 @@ public class MarketSignListener implements Listener {
             return;
         }
 
+        // Validate price against claim block minimum
+        String priceError = plugin.getListingManager().validateListingPrice(signLocation, input.getPrice());
+        if (priceError != null) {
+            player.sendMessage(plugin.getConfigManager().getPrefix() + priceError);
+            event.setCancelled(true);
+            return;
+        }
+
         SaleData sale = plugin.getSaleManager().createSale(player, signLocation, input.getPrice());
 
         if (sale == null) {
@@ -110,6 +118,14 @@ public class MarketSignListener implements Listener {
             input = plugin.getSignManager().parseAuctionSign(lines);
         } catch (IllegalArgumentException e) {
             player.sendMessage(plugin.getConfigManager().getPrefix() + e.getMessage());
+            event.setCancelled(true);
+            return;
+        }
+
+        // Validate minimum bid against claim block minimum
+        String priceError = plugin.getListingManager().validateListingPrice(signLocation, input.getMinimumBid());
+        if (priceError != null) {
+            player.sendMessage(plugin.getConfigManager().getPrefix() + priceError);
             event.setCancelled(true);
             return;
         }

@@ -35,6 +35,8 @@ The sign auto-formats with the price, your name, and claim dimensions. Other pla
 
 Price supports shorthand: `50k`, `1.5M`, or plain numbers like `50000`.
 
+**Minimum Price:** The plugin enforces a minimum price based on claim block value. If GriefPrevention's economy is enabled, no claim can be listed below `area × ClaimBlocksPurchaseCost`. This prevents players from accidentally selling land below its claim block value. Want to give away a claim for less? Abandon it and let the recipient claim it themselves.
+
 #### Auctions (Sealed-Bid Vickrey)
 
 Place a sign inside your claim:
@@ -63,6 +65,23 @@ Players bid through a sign GUI that opens when they click "Place Sealed Bid" in 
 
 An expiration task runs periodically to settle ended auctions and update countdown timers on signs.
 
+#### Claim Block Transfer
+
+When a claim is sold (via sale or auction), the buyer receives bonus claim blocks equal to the claim's area. This ensures the buyer can own the claim without needing to have accumulated enough blocks beforehand. The seller effectively "transfers" their invested claim blocks to the buyer.
+
+#### Transaction History
+
+All completed transactions are permanently logged to `transactions.yml`. Each transaction records:
+- Transaction ID (TX000001, TX000002, etc.)
+- Type (SALE, AUCTION, or BUY_NOW)
+- Timestamp
+- Seller and buyer names/UUIDs
+- Price paid
+- Claim details (size, dimensions, location, name)
+- For auctions: winning bid vs. Vickrey price paid, bid count
+
+Use `/ffc transactions` to view recent transactions or `/ffc tx TX000123` to view details of a specific transaction.
+
 #### Market Commands
 
 | Command | Description |
@@ -70,8 +89,11 @@ An expiration task runs periodically to settle ended auctions and update countdo
 | `/ffc list` | View all active sales and auctions |
 | `/ffc mybids` | View auctions you've bid on |
 | `/ffc mylistings` | View your active listings |
+| `/ffc transactions [count]` | View recent transactions (default 10, max 50) |
+| `/ffc tx <TX#>` | View details of a specific transaction |
 | `/ffc help` | Sign formats and command help |
 | `/ffc reload` | Reload config (admin) |
+| `/ffc transactions <player>` | View a player's transactions (admin) |
 
 ## Requirements
 
@@ -83,6 +105,10 @@ An expiration task runs periodically to settle ended auctions and update countdo
 | [dynmap](https://github.com/webbukkit/dynmap) | Optional | Web map markers for named claims |
 
 The naming module works without Vault. The market module gracefully disables itself if Vault isn't present.
+
+### Dual-Currency Compatibility
+
+If the DualCurrency plugin is detected (where claim blocks are purchased with items like netherite instead of cash), the automatic minimum price enforcement is disabled. This is because there's no direct conversion between the item currency and the cash economy used for real estate transactions.
 
 ## Installation
 
@@ -180,6 +206,7 @@ All data is stored as YAML files in the plugin folder:
 | `naming-data.yml` | Claim ID → name mappings |
 | `market-sales.yml` | Active sale listings |
 | `market-auctions.yml` | Active auctions with all bids |
+| `transactions.yml` | Permanent log of all completed transactions |
 
 ## Architecture
 
@@ -202,6 +229,7 @@ com.haksnbot.ffclaims
 └── market/
     ├── data/
     │   ├── MarketDataManager  YAML persistence, indexing
+    │   ├── TransactionLogger  Permanent transaction history
     │   ├── SaleData           Sale listing model
     │   ├── AuctionData        Auction model with Vickrey settlement
     │   └── BidData            Individual bid record

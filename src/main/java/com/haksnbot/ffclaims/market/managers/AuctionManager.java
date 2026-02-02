@@ -160,6 +160,26 @@ public class AuctionManager {
 
         // === TRANSACTION SUCCESS ===
 
+        // Transfer claim blocks to buyer
+        int claimArea = gpHook.getClaimArea(claim);
+        gpHook.transferClaimBlocks(auction.getSellerUUID(), buyer.getUniqueId(), claimArea);
+
+        // Get claim name if available
+        String claimName = getClaimName(claim);
+
+        // Log the transaction
+        Location claimLoc = auction.getClaimLocation();
+        String claimLocStr = String.format("%s @ %d, %d, %d",
+                claimLoc.getWorld().getName(),
+                claimLoc.getBlockX(), claimLoc.getBlockY(), claimLoc.getBlockZ());
+
+        plugin.getTransactionLogger().logBuyNow(
+                auction.getSellerUUID(), auction.getSellerName(),
+                buyer.getUniqueId(), buyer.getName(),
+                price, claimArea, auction.getDimensions(),
+                claimLocStr, claimName
+        );
+
         // Mark auction as ended
         auction.setEnded(true);
         plugin.getSignManager().removeSign(auction.getSignLocation());
@@ -258,6 +278,27 @@ public class AuctionManager {
 
         // === TRANSACTION SUCCESS ===
 
+        // Transfer claim blocks to winner
+        int claimArea = gpHook.getClaimArea(claim);
+        gpHook.transferClaimBlocks(auction.getSellerUUID(), highestBid.getBidderUUID(), claimArea);
+
+        // Get claim name if available
+        String claimName = getClaimName(claim);
+
+        // Log the transaction
+        Location claimLoc = auction.getClaimLocation();
+        String claimLocStr = String.format("%s @ %d, %d, %d",
+                claimLoc.getWorld().getName(),
+                claimLoc.getBlockX(), claimLoc.getBlockY(), claimLoc.getBlockZ());
+
+        plugin.getTransactionLogger().logAuction(
+                auction.getSellerUUID(), auction.getSellerName(),
+                highestBid.getBidderUUID(), highestBid.getBidderName(),
+                highestBid.getAmount(), vickreyPrice, auction.getBids().size(),
+                claimArea, auction.getDimensions(),
+                claimLocStr, claimName
+        );
+
         auction.setEnded(true);
         plugin.getSignManager().removeSign(auction.getSignLocation());
         plugin.getMarketDataManager().removeAuction(auction.getId());
@@ -272,10 +313,6 @@ public class AuctionManager {
                 .replace("%winner%", highestBid.getBidderName())
                 .replace("%price%", vault.format(vickreyPrice));
         notifyPlayer(auction.getSellerUUID(), sellerMsg);
-
-        plugin.getLogger().info("Auction " + auction.getId() + " won by " +
-                highestBid.getBidderName() + " for " + vault.format(vickreyPrice) +
-                " (Vickrey: highest bid was " + vault.format(highestBid.getAmount()) + ")");
     }
 
     /**
@@ -318,6 +355,17 @@ public class AuctionManager {
         if (player != null) {
             player.sendMessage(plugin.getConfigManager().getPrefix() + message);
         }
+    }
+
+    private String getClaimName(Claim claim) {
+        if (!plugin.isNamingEnabled() || plugin.getNamingDataManager() == null) {
+            return null;
+        }
+        Long claimId = plugin.getGriefPreventionHook().getClaimId(claim);
+        if (claimId == null) {
+            return null;
+        }
+        return plugin.getNamingDataManager().getClaimName(claimId);
     }
 
     /**
