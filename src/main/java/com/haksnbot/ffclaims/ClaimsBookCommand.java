@@ -76,7 +76,7 @@ public class ClaimsBookCommand implements CommandExecutor {
                 .append(Component.text(" to claim land.\n\n", NamedTextColor.BLACK))
                 .append(Component.text("1. Right-click one corner\n", NamedTextColor.DARK_GRAY))
                 .append(Component.text("2. Right-click opposite corner\n\n", NamedTextColor.DARK_GRAY))
-                .append(Component.text("Minimum size: 10x10\n\n", NamedTextColor.BLACK))
+                .append(Component.text("Minimum: 2 wide, 4 blocks\n\n", NamedTextColor.BLACK))
                 .append(Component.text("Right-click with a ", NamedTextColor.BLACK))
                 .append(Component.text("stick", NamedTextColor.GOLD))
                 .append(Component.text(" to see claim boundaries.", NamedTextColor.BLACK))
