@@ -282,13 +282,10 @@ public class GriefPreventionHook {
      * The claim area is removed from seller's effective balance and added to buyer's.
      */
     public void transferClaimBlocks(UUID sellerUUID, UUID buyerUUID, int claimArea) {
-        // Seller loses the claim blocks (they were "invested" in the claim)
-        // We don't need to remove from seller - the claim ownership change handles that
-        // But we DO need to give the buyer enough blocks if they don't have them
-
-        // Actually, GP's changeClaimOwner just reassigns. The buyer might not have enough
-        // blocks to "afford" the claim in their balance. We need to grant them bonus blocks
-        // equal to the claim size to ensure they can own it.
+        // Zero-sum transfer: seller loses blocks, buyer gains them.
+        // GP's changeClaimOwner frees the seller's "used" blocks, so we must also
+        // subtract from their bonus to prevent phantom block duplication.
+        adjustPlayerBonusClaimBlocks(sellerUUID, -claimArea);
         adjustPlayerBonusClaimBlocks(buyerUUID, claimArea);
     }
 }
